@@ -136,32 +136,37 @@
 
 /* ========================================
    Kick Player Overlay (when watching Kick)
+   Positioned to not cover the left sidebar
    ======================================== */
 
 .kwitch-player-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
+  /* Leave room for sidebar (about 50px collapsed, 240px expanded) */
+  left: 50px;
+  top: 50px; /* Leave room for Twitch top nav */
   right: 0;
   bottom: 0;
-  z-index: 9999;
+  z-index: 5000;
   background: #0e0e10;
   display: flex;
+  flex-direction: column;
 }
 
-.kwitch-player-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+/* When sidebar is expanded, adjust left position */
+@media (min-width: 1200px) {
+  .kwitch-player-overlay {
+    left: 240px;
+  }
 }
 
 .kwitch-player-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 8px 16px;
   background: #18181b;
   border-bottom: 1px solid #2f2f35;
+  flex-shrink: 0;
 }
 
 .kwitch-player-title {
@@ -169,10 +174,11 @@
   align-items: center;
   gap: 10px;
   font-weight: 600;
+  color: #efeff1;
 }
 
 .kwitch-player-title .kick-badge {
-  background: #00e701;
+  background: #53fc18;
   color: #0e0e10;
   padding: 2px 8px;
   border-radius: 4px;
@@ -186,10 +192,10 @@
 }
 
 .kwitch-btn {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: none;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
@@ -200,12 +206,12 @@
 }
 
 .kwitch-btn-primary {
-  background: #00e701;
+  background: #53fc18;
   color: #0e0e10;
 }
 
 .kwitch-btn-primary:hover {
-  background: #00ff00;
+  background: #6fff3a;
 }
 
 .kwitch-btn-secondary {
@@ -220,30 +226,11 @@
 .kwitch-player-frame {
   flex: 1;
   border: none;
-}
-
-.kwitch-chat-container {
-  width: 340px;
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid #2f2f35;
-}
-
-.kwitch-chat-header {
-  padding: 10px 16px;
-  background: #18181b;
-  border-bottom: 1px solid #2f2f35;
-  font-weight: 600;
-  text-align: center;
-}
-
-.kwitch-chat-frame {
-  flex: 1;
-  border: none;
+  width: 100%;
 }
 
 /* ========================================
-   Popout Button (mini-player)
+   Popout Button (if needed later)
    ======================================== */
 
 .kwitch-popout-btn {
@@ -252,18 +239,18 @@
   right: 20px;
   z-index: 10000;
   padding: 12px 20px;
-  background: #00e701;
+  background: #53fc18;
   color: #0e0e10;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 231, 1, 0.3);
+  box-shadow: 0 4px 12px rgba(83, 252, 24, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .kwitch-popout-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 231, 1, 0.4);
+  box-shadow: 0 6px 16px rgba(83, 252, 24, 0.4);
 }
