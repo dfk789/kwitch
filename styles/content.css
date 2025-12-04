@@ -1,0 +1,281 @@
+/* Kwitch Content Styles - Injected into Twitch */
+
+/* ========================================
+   Kick Section in Sidebar
+   ======================================== */
+
+.kwitch-section {
+  margin-bottom: 10px;
+}
+
+.kwitch-section-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #adadb8;
+  user-select: none;
+}
+
+.kwitch-section-header::before {
+  content: '🟢';
+  margin-right: 6px;
+  font-size: 10px;
+}
+
+.kwitch-section-header:hover {
+  color: #efeff1;
+}
+
+/* ========================================
+   Channel Cards
+   ======================================== */
+
+.kwitch-channel {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-left: 3px solid #00e701;
+  background: rgba(0, 231, 1, 0.05);
+}
+
+.kwitch-channel:hover {
+  background: rgba(0, 231, 1, 0.15);
+}
+
+.kwitch-channel.offline {
+  border-left-color: #3d3d42;
+  background: transparent;
+}
+
+.kwitch-channel.offline:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.kwitch-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.kwitch-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: filter 0.2s;
+}
+
+.kwitch-channel.offline .kwitch-avatar {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+.kwitch-live-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background: #eb0400;
+  border: 2px solid #0e0e10;
+  border-radius: 50%;
+}
+
+.kwitch-channel-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 10px;
+}
+
+.kwitch-channel-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #efeff1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kwitch-channel.offline .kwitch-channel-name {
+  color: #adadb8;
+}
+
+.kwitch-channel-game {
+  font-size: 12px;
+  color: #adadb8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kwitch-viewer-count {
+  font-size: 12px;
+  color: #eb0400;
+  font-weight: 600;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   Collapsed Sidebar Mode
+   ======================================== */
+
+.kwitch-section.collapsed .kwitch-section-header span {
+  display: none;
+}
+
+.kwitch-section.collapsed .kwitch-channel-info,
+.kwitch-section.collapsed .kwitch-viewer-count {
+  display: none;
+}
+
+.kwitch-section.collapsed .kwitch-channel {
+  justify-content: center;
+  padding: 5px;
+  border-left: none;
+  border-bottom: 2px solid transparent;
+}
+
+.kwitch-section.collapsed .kwitch-channel:not(.offline) {
+  border-bottom-color: #00e701;
+}
+
+/* ========================================
+   Kick Player Overlay (when watching Kick)
+   ======================================== */
+
+.kwitch-player-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: #0e0e10;
+  display: flex;
+}
+
+.kwitch-player-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.kwitch-player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #18181b;
+  border-bottom: 1px solid #2f2f35;
+}
+
+.kwitch-player-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.kwitch-player-title .kick-badge {
+  background: #00e701;
+  color: #0e0e10;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.kwitch-player-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.kwitch-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.kwitch-btn:active {
+  transform: scale(0.95);
+}
+
+.kwitch-btn-primary {
+  background: #00e701;
+  color: #0e0e10;
+}
+
+.kwitch-btn-primary:hover {
+  background: #00ff00;
+}
+
+.kwitch-btn-secondary {
+  background: #3d3d42;
+  color: #efeff1;
+}
+
+.kwitch-btn-secondary:hover {
+  background: #4d4d52;
+}
+
+.kwitch-player-frame {
+  flex: 1;
+  border: none;
+}
+
+.kwitch-chat-container {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #2f2f35;
+}
+
+.kwitch-chat-header {
+  padding: 10px 16px;
+  background: #18181b;
+  border-bottom: 1px solid #2f2f35;
+  font-weight: 600;
+  text-align: center;
+}
+
+.kwitch-chat-frame {
+  flex: 1;
+  border: none;
+}
+
+/* ========================================
+   Popout Button (mini-player)
+   ======================================== */
+
+.kwitch-popout-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  padding: 12px 20px;
+  background: #00e701;
+  color: #0e0e10;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 231, 1, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kwitch-popout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 231, 1, 0.4);
+}

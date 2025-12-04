@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "Kwitch - Kick on Twitch",
+  "version": "0.1.0",
+  "description": "Watch Kick streams on Twitch - see your Kick follows in the Twitch sidebar",
+  "icons": {
+    "16": "assets/icon-16.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://kick.com/*",
+    "https://*.twitch.tv/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.twitch.tv/*"],
+      "js": ["content/inject-sidebar.js"],
+      "css": ["assets/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "48": "assets/icon-48.png"
+    },
+    "default_title": "Kwitch - Manage Kick Channels"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["content/inject-player.js"],
+      "matches": ["https://www.twitch.tv/*"]
+    }
+  ]
+}

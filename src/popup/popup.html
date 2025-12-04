@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kwitch</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup">
+      <header class="header">
+        <h1>
+          <span class="logo">🟢</span>
+          Kwitch
+        </h1>
+        <p class="subtitle">Kick channels on Twitch</p>
+      </header>
+
+      <section class="add-section">
+        <form id="add-form" class="add-form">
+          <input
+            type="text"
+            id="channel-input"
+            placeholder="Enter Kick channel name..."
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="submit" class="btn-add" title="Add channel">+</button>
+        </form>
+      </section>
+
+      <section class="channels-section">
+        <div class="section-header">
+          <h2>Watching</h2>
+          <button id="refresh-btn" class="btn-refresh" title="Refresh status">
+            ↻
+          </button>
+        </div>
+        <ul id="channel-list" class="channel-list">
+          <!-- Channels rendered here -->
+        </ul>
+        <p id="empty-message" class="empty-message" hidden>
+          No channels yet. Add some above!
+        </p>
+      </section>
+
+      <footer class="footer">
+        <span id="status">Ready</span>
+      </footer>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
