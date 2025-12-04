@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { copyFileSync, mkdirSync, existsSync } from 'fs';
+import { copyFileSync, mkdirSync, existsSync, writeFileSync, readFileSync } from 'fs';
 
 // Copy static files to dist
 function copyStaticFiles() {
   return {
     name: 'copy-static-files',
-    writeBundle() {
+    closeBundle() {
       // Create directories
       const distAssets = resolve(__dirname, 'dist/assets');
       const distPopup = resolve(__dirname, 'dist/popup');
@@ -36,7 +36,7 @@ function copyStaticFiles() {
         resolve(__dirname, 'dist/assets/content.css')
       );
       
-      // Copy icons (placeholder - we'll generate these)
+      // Copy icons
       const iconsDir = resolve(__dirname, 'assets/icons');
       if (existsSync(iconsDir)) {
         if (existsSync(resolve(iconsDir, 'icon-16.png'))) {
@@ -55,10 +55,18 @@ function copyStaticFiles() {
   };
 }
 
+// For content scripts, we need to build as IIFE with everything inlined
+// We'll do this by having separate build configs
+const isContentScript = process.env.BUILD_TARGET === 'content';
+const isBackground = process.env.BUILD_TARGET === 'background';
+const isPopup = process.env.BUILD_TARGET === 'popup';
+
+// Default: build all as separate files, but each fully bundled
 export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    lib: false,
     rollupOptions: {
       input: {
         'background/service-worker': resolve(__dirname, 'src/background/service-worker.ts'),
@@ -66,10 +74,13 @@ export default defineConfig({
         'popup/popup': resolve(__dirname, 'src/popup/popup.ts'),
       },
       output: {
+        format: 'es',
         entryFileNames: '[name].js',
-        chunkFileNames: 'chunks/[name]-[hash].js',
-        assetFileNames: 'assets/[name][extname]',
+        // Inline all chunks into the entry files
+        inlineDynamicImports: true,
       },
+      // Ensure each entry is self-contained
+      preserveEntrySignatures: 'allow-extension',
     },
     target: 'esnext',
     minify: false,

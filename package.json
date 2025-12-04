@@ -4,8 +4,8 @@
   "description": "Watch Kick streams on Twitch - integrates Kick follows into Twitch sidebar",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "tsc && vite build",
+    "dev": "node build.mjs --watch",
+    "build": "tsc --noEmit && node build.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix"
@@ -14,6 +14,7 @@
     "@types/chrome": "^0.0.254",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
     "@typescript-eslint/parser": "^6.16.0",
+    "esbuild": "^0.27.1",
     "eslint": "^8.56.0",
     "sharp": "^0.34.5",
     "typescript": "^5.3.3",
