@@ -58,12 +58,11 @@ function copyStaticFiles() {
 export default defineConfig({
   build: {
     outDir: 'dist',
-    emptyDirFirst: true,
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         'background/service-worker': resolve(__dirname, 'src/background/service-worker.ts'),
         'content/inject-sidebar': resolve(__dirname, 'src/content/inject-sidebar.ts'),
-        'content/inject-player': resolve(__dirname, 'src/content/inject-player.ts'),
         'popup/popup': resolve(__dirname, 'src/popup/popup.ts'),
       },
       output: {

@@ -5,6 +5,7 @@
  */
 
 import { KickChannel, MessageType } from '../lib/types';
+import { showKickPlayer } from './inject-player';
 
 // Constants
 const SIDEBAR_SELECTORS = [
@@ -122,10 +123,22 @@ function renderChannels(): void {
   
   sectionElement.innerHTML = '';
   
-  // Header
+  // Header with Kick icon
   const header = document.createElement('div');
   header.className = 'kwitch-section-header';
-  header.innerHTML = '<span>Kick Channels</span>';
+  
+  // Create Kick icon (inline SVG)
+  const kickIcon = document.createElement('div');
+  kickIcon.className = 'kwitch-section-icon';
+  kickIcon.innerHTML = `<svg viewBox="0 0 128 128" style="width:100%;height:100%">
+    <rect width="128" height="128" rx="16" fill="#53fc18"/>
+    <path d="M40 28h16v28l20-28h20L72 60l28 40H80L60 72v28H40V28z" fill="#0e0e10"/>
+  </svg>`;
+  
+  header.appendChild(kickIcon);
+  const headerText = document.createElement('span');
+  headerText.textContent = 'Kick Channels';
+  header.appendChild(headerText);
   sectionElement.appendChild(header);
   
   if (channels.length === 0) {
@@ -185,11 +198,8 @@ function createChannelCard(channel: KickChannel): HTMLElement {
 function handleChannelClick(channel: KickChannel): void {
   console.log(`[Kwitch] Opening ${channel.slug}`);
   
-  // For MVP, open in new tab (embedding will be added later)
-  window.open(`https://kick.com/${channel.slug}`, '_blank');
-  
-  // TODO: Try embedding first, fall back to popout
-  // chrome.runtime.sendMessage({ type: 'WATCH_KICK_CHANNEL', slug: channel.slug });
+  // Show the embedded Kick player overlay
+  showKickPlayer(channel.slug);
 }
 
 /**

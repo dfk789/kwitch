@@ -35,11 +35,5 @@
       "48": "assets/icon-48.png"
     },
     "default_title": "Kwitch - Manage Kick Channels"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["content/inject-player.js"],
-      "matches": ["https://www.twitch.tv/*"]
-    }
-  ]
+  }
 }

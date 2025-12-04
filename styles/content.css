@@ -19,10 +19,11 @@
   user-select: none;
 }
 
-.kwitch-section-header::before {
-  content: '🟢';
+.kwitch-section-icon {
+  width: 20px;
+  height: 20px;
   margin-right: 6px;
-  font-size: 10px;
+  border-radius: 4px;
 }
 
 .kwitch-section-header:hover {
@@ -41,17 +42,10 @@
   color: inherit;
   cursor: pointer;
   transition: background 0.1s;
-  border-left: 3px solid #00e701;
-  background: rgba(0, 231, 1, 0.05);
 }
 
 .kwitch-channel:hover {
-  background: rgba(0, 231, 1, 0.15);
-}
-
-.kwitch-channel.offline {
-  border-left-color: #3d3d42;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .kwitch-channel.offline:hover {
@@ -138,12 +132,6 @@
 .kwitch-section.collapsed .kwitch-channel {
   justify-content: center;
   padding: 5px;
-  border-left: none;
-  border-bottom: 2px solid transparent;
-}
-
-.kwitch-section.collapsed .kwitch-channel:not(.offline) {
-  border-bottom-color: #00e701;
 }
 
 /* ========================================

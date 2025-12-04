@@ -12,10 +12,11 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.0.254",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.10",
-    "eslint": "^8.56.0",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0"
+    "@typescript-eslint/parser": "^6.16.0",
+    "eslint": "^8.56.0",
+    "sharp": "^0.34.5",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10"
   }
 }
