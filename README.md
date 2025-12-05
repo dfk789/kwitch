@@ -1,15 +1,25 @@
 # Kwitch 🟢
 
-**Watch Kick streams on Twitch** — A browser extension that integrates your Kick.com followed channels into the Twitch sidebar.
+**Watch Kick streams on Twitch** — A browser extension that integrates your Kick.com channels into the Twitch sidebar.
 
 ## Features
 
-- 🟢 **Unified Sidebar** — See Kick channels alongside Twitch follows
-- 🎨 **Visual Distinction** — Green border for Kick, B&W when offline
-- 📺 **Seamless Watching** — Watch Kick streams without leaving Twitch
-- 💬 **Kick Chat** — Chat replaces Twitch chat when watching Kick
+- 🟢 **Unified Sidebar** — See your Kick channels alongside Twitch follows
+- 🔴 **Live Status** — Red dot with viewer count for live channels (just like Twitch)
+- 📺 **Seamless Watching** — Click a Kick channel to watch in an embedded player on Twitch
+- 💬 **Kick Chat** — Kick chat appears alongside the stream when watching
+- ⚡ **Smart Caching** — Channels still display (as offline) even if Kick's API is down
+- 🎨 **Twitch-Native Look** — Matches Twitch's sidebar style with green accent for Kick branding
+
+## Screenshots
+
+_(Add screenshots here for Chrome Web Store)_
 
 ## Installation
+
+### From Chrome Web Store
+
+_(Coming soon)_
 
 ### From Source (Development)
 
@@ -22,10 +32,19 @@
 
 ## Usage
 
-1. Click the Kwitch icon in your browser toolbar
-2. Add Kick channel names to your watchlist
-3. Visit twitch.tv — your Kick follows appear in the sidebar!
-4. Click a Kick channel to watch on the Twitch page
+1. Click the Kwitch extension icon in your browser toolbar
+2. Add Kick channel usernames to your watchlist (use exact casing from Kick URL)
+3. Visit twitch.tv — your Kick channels appear in the sidebar!
+4. Click any Kick channel to watch the stream embedded on Twitch
+5. Use the popup settings to change where the Kick section appears in the sidebar
+
+### Settings
+
+- **Sidebar Position**: Choose where the Kick section appears:
+  - Above Followed Channels (default)
+  - Below Followed Channels
+  - Below Live Channels
+  - Below Viewers Also Watch
 
 ## Development
 
@@ -37,12 +56,26 @@ npm run lint         # Run linter
 npm run typecheck    # Type checking only
 ```
 
+### Project Structure
+
+```
+kwitch/
+├── src/
+│   ├── background/     # Service worker (API polling)
+│   ├── content/        # Twitch page injection
+│   ├── popup/          # Extension popup UI
+│   └── lib/            # Shared types, storage, API
+├── styles/             # CSS for injected content
+├── icons/              # Extension icons
+└── dist/               # Built extension (load this in Chrome)
+```
+
 ## Tech Stack
 
 - TypeScript
 - Chrome Extension Manifest V3
-- Vite (for bundling)
-- ESLint + Prettier
+- esbuild (for bundling)
+- ESLint
 
 ## Browser Support
 
@@ -51,6 +84,14 @@ npm run typecheck    # Type checking only
 - ✅ Vivaldi
 - ✅ Edge
 - ⚠️ Firefox (Manifest V3 support varies)
+
+## Publishing
+
+To publish to Chrome Web Store:
+
+1. Run `npm run build`
+2. Create a ZIP of the `dist/` folder
+3. Upload to [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole)
 
 ## License
 
