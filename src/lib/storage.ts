@@ -37,10 +37,11 @@ export async function setChannelSlugs(slugs: string[]): Promise<void> {
  * Add a channel to the watchlist
  */
 export async function addChannel(slug: string): Promise<void> {
-  const normalized = slug.toLowerCase().trim();
+  const normalized = slug.trim();
   const current = await getChannelSlugs();
   
-  if (!current.includes(normalized)) {
+  // Case-insensitive check to avoid duplicates, but preserve original case
+  if (!current.some(c => c.toLowerCase() === normalized.toLowerCase())) {
     await setChannelSlugs([...current, normalized]);
   }
 }
@@ -49,9 +50,10 @@ export async function addChannel(slug: string): Promise<void> {
  * Remove a channel from the watchlist
  */
 export async function removeChannel(slug: string): Promise<void> {
-  const normalized = slug.toLowerCase().trim();
+  const normalized = slug.trim();
   const current = await getChannelSlugs();
-  await setChannelSlugs(current.filter(s => s !== normalized));
+  // Case-insensitive removal
+  await setChannelSlugs(current.filter(s => s.toLowerCase() !== normalized.toLowerCase()));
 }
 
 /**

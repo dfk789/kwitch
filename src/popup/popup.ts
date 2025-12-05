@@ -123,12 +123,13 @@ function renderChannels(): void {
  * Handle adding a new channel
  */
 async function handleAddChannel(slug: string): Promise<void> {
-  const normalized = slug.toLowerCase().trim().replace(/^@/, '');
+  // Preserve case - Kick API is case-sensitive
+  const normalized = slug.trim().replace(/^@/, '');
   
   if (!normalized) return;
   
-  // Check if already added
-  if (channels.some(c => c.slug === normalized)) {
+  // Case-insensitive check for duplicates
+  if (channels.some(c => c.slug.toLowerCase() === normalized.toLowerCase())) {
     setStatus('Already added!');
     return;
   }
