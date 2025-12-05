@@ -5,7 +5,7 @@
  */
 
 import { KickChannel, MessageType, ExtensionSettings } from '../lib/types';
-import { getSettings, getChannelSlugs } from '../lib/storage';
+import { getSettings, getChannelSlugs, getChannelState } from '../lib/storage';
 import { showKickPlayer } from './inject-player';
 
 // Constants
@@ -32,26 +32,46 @@ async function init(): Promise<void> {
     console.log('[Kwitch] Could not load settings:', error);
   }
 
-  // Always get channel slugs from storage first - this is the source of truth
-  // This ensures channels are shown even when the API is down
+  // Load cached channel state first (includes profile pics from last successful poll)
+  // Fall back to slugs only if no cached state exists
   try {
+    const cachedState = await getChannelState();
     const slugs = await getChannelSlugs();
-    channels = slugs.map(slug => ({
-      slug,
-      displayName: slug,
-      profilePic: '',
-      isLive: false,
-      lastUpdated: 0,
-    }));
+    
+    if (cachedState.length > 0) {
+      // Use cached state (has profile pics, display names, etc.)
+      const cachedMap = new Map(cachedState.map(c => [c.slug.toLowerCase(), c]));
+      
+      // Build channels from slugs, using cached data where available
+      channels = slugs.map(slug => {
+        const cached = cachedMap.get(slug.toLowerCase());
+        return cached || {
+          slug,
+          displayName: slug,
+          profilePic: '',
+          isLive: false,
+          lastUpdated: 0,
+        };
+      });
+    } else {
+      // No cache, create placeholders from slugs
+      channels = slugs.map(slug => ({
+        slug,
+        displayName: slug,
+        profilePic: '',
+        isLive: false,
+        lastUpdated: 0,
+      }));
+    }
   } catch (error) {
-    console.log('[Kwitch] Could not get channel slugs:', error);
+    console.log('[Kwitch] Could not load channel data:', error);
   }
 
-  // Try to get live status from background (may fail if API is down)
+  // Try to get fresh live status from background (may fail if API is down)
   try {
     const response = await chrome.runtime.sendMessage({ type: 'GET_CHANNELS' }) as MessageType;
     if (response?.type === 'GET_CHANNELS_RESPONSE' && response.channels.length > 0) {
-      // Merge: use background data for channels that exist, keep placeholders for missing
+      // Merge: use background data for channels that exist, keep cached/placeholders for missing
       const backgroundMap = new Map(response.channels.map(c => [c.slug.toLowerCase(), c]));
       channels = channels.map(channel => 
         backgroundMap.get(channel.slug.toLowerCase()) || channel
