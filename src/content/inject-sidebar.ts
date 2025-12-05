@@ -420,8 +420,22 @@ function handleChannelClick(channel: KickChannel): void {
  */
 function handleMessage(message: MessageType): void {
   if (message.type === 'CHANNELS_UPDATED') {
-    channels = message.channels;
-    renderChannels();
+    // Only update if we have actual channel data from the API
+    // Don't overwrite cached channels with empty array when API fails
+    if (message.channels.length > 0) {
+      // Merge: update existing channels with new data, preserve order
+      const updatedMap = new Map(message.channels.map(c => [c.slug.toLowerCase(), c]));
+      channels = channels.map(channel => 
+        updatedMap.get(channel.slug.toLowerCase()) || { ...channel, isLive: false }
+      );
+      // Add any new channels from the update that we don't have
+      for (const updated of message.channels) {
+        if (!channels.some(c => c.slug.toLowerCase() === updated.slug.toLowerCase())) {
+          channels.push(updated);
+        }
+      }
+      renderChannels();
+    }
   }
 }
 
