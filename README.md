@@ -11,16 +11,6 @@
 - ⚡ **Smart Caching** — Channels still display (as offline) even if Kick's API is down
 - 🎨 **Twitch-Native Look** — Matches Twitch's sidebar style with green accent for Kick branding
 
-## Screenshots
-
-_(Add screenshots here for Chrome Web Store)_
-
-## Installation
-
-### From Chrome Web Store
-
-_(Coming soon)_
-
 ### From Source (Development)
 
 1. Clone this repository
@@ -84,14 +74,6 @@ kwitch/
 - ✅ Vivaldi
 - ✅ Edge
 - ⚠️ Firefox (Manifest V3 support varies)
-
-## Publishing
-
-To publish to Chrome Web Store:
-
-1. Run `npm run build`
-2. Create a ZIP of the `dist/` folder
-3. Upload to [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole)
 
 ## License
 
