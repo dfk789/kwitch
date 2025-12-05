@@ -129,28 +129,15 @@ function insertAtPosition(sidebar: HTMLElement, element: HTMLElement, position: 
   const viewersAlsoWatchHeader = findHeaderByText('Viewers Also Watch');
   const viewersAlsoWatchSection = viewersAlsoWatchHeader ? viewersAlsoWatchHeader.closest('.side-nav-section') || viewersAlsoWatchHeader.closest('div[role="group"]') : null;
 
-  // Find 'For You' header - Kick section should go AFTER it but BEFORE Followed
-  const forYouHeader = findHeaderByText('For You');
-  const forYouSection = forYouHeader ? forYouHeader.closest('.side-nav-section') || forYouHeader.closest('div[role="group"]') || forYouHeader.parentElement : null;
-
   try {
     switch (position) {
       case 'above_followed':
-        // Insert AFTER "For You" header but BEFORE "Followed Channels"
-        if (forYouSection && forYouSection.nextSibling) {
-          // Insert after the For You header/section
-          forYouSection.parentNode?.insertBefore(element, forYouSection.nextSibling);
-        } else if (followedSection && followedSection.parentNode === sidebar) {
-          sidebar.insertBefore(element, followedSection);
-        } else if (followedSection) {
+        // Insert right BEFORE "Followed Channels" section
+        if (followedSection) {
           followedSection.parentNode?.insertBefore(element, followedSection);
         } else {
-          // Fallback: after first child (which should be For You)
-          if (sidebar.firstChild?.nextSibling) {
-            sidebar.insertBefore(element, sidebar.firstChild.nextSibling);
-          } else {
-            sidebar.appendChild(element);
-          }
+          // Fallback: append to sidebar
+          sidebar.appendChild(element);
         }
         break;
         

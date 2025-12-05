@@ -16,30 +16,40 @@ const refreshBtn = document.getElementById('refresh-btn') as HTMLButtonElement;
 const statusEl = document.getElementById('status') as HTMLSpanElement;
 const positionSelect = document.getElementById('position-select') as HTMLSelectElement;
 
-// Current channel state
 let channels: KickChannel[] = [];
 
 /**
  * Initialize popup
  */
 async function init(): Promise<void> {
-  // Request current channel state from background
-  const response = await chrome.runtime.sendMessage({ type: 'GET_CHANNELS' }) as MessageType;
+  // Always get channel slugs from storage first - this is the source of truth
+  const slugs = await getChannelSlugs();
   
-  if (response?.type === 'GET_CHANNELS_RESPONSE') {
-    channels = response.channels;
-  }
+  // Create placeholder channels from slugs
+  channels = slugs.map(slug => ({
+    slug,
+    displayName: slug,
+    profilePic: '',
+    isLive: false,
+    lastUpdated: 0,
+  }));
   
-  // If no state yet, just show slugs
-  if (channels.length === 0) {
-    const slugs = await getChannelSlugs();
-    channels = slugs.map(slug => ({
-      slug,
-      displayName: slug,
-      profilePic: '',
-      isLive: false,
-      lastUpdated: 0,
-    }));
+  // Now try to get live status from background
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'GET_CHANNELS' }) as MessageType;
+    if (response?.type === 'GET_CHANNELS_RESPONSE' && response.channels.length > 0) {
+      // Merge: use background data for channels that exist in our slugs
+      const backgroundMap = new Map(response.channels.map(c => [c.slug, c]));
+      channels = slugs.map(slug => backgroundMap.get(slug) || {
+        slug,
+        displayName: slug,
+        profilePic: '',
+        isLive: false,
+        lastUpdated: 0,
+      });
+    }
+  } catch (error) {
+    console.log('Could not get channel state from background:', error);
   }
   
   renderChannels();
