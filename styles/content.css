@@ -116,16 +116,62 @@
   flex-shrink: 0;
 }
 
+/* Info row - name + viewer count inline */
+.kwitch-info-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Empty state */
+.kwitch-empty {
+  padding: 10px;
+  color: #adadb8;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Show More / Show Less button */
+.kwitch-show-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  color: #bf94ff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.kwitch-show-more:hover {
+  color: #a970ff;
+}
+
 /* ========================================
    Collapsed Sidebar Mode
    ======================================== */
 
-.kwitch-section.collapsed .kwitch-section-header span {
+/* Hide icon when sidebar is expanded (only show in collapsed mode) */
+.kwitch-section-header .kwitch-section-icon {
+  display: none;
+}
+
+.kwitch-section.collapsed .kwitch-section-header .kwitch-section-icon {
+  display: flex;
+}
+
+.kwitch-section.collapsed .kwitch-section-header span,
+.kwitch-section.collapsed .kwitch-header-text {
   display: none;
 }
 
 .kwitch-section.collapsed .kwitch-channel-info,
-.kwitch-section.collapsed .kwitch-viewer-count {
+.kwitch-section.collapsed .kwitch-viewer-count,
+.kwitch-section.collapsed .kwitch-show-more {
   display: none;
 }
 

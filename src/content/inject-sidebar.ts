@@ -4,21 +4,21 @@
  * Injects Kick channels into the Twitch left sidebar.
  */
 
-import { KickChannel, MessageType } from '../lib/types';
+import { KickChannel, MessageType, ExtensionSettings } from '../lib/types';
+import { getSettings } from '../lib/storage';
 import { showKickPlayer } from './inject-player';
 
 // Constants
-const SIDEBAR_SELECTORS = [
-  '.side-nav-section',
-  '[data-a-target="side-nav-header-expanded"]',
-  '.side-nav',
-];
-const POLL_INTERVAL = 1000; // Check for sidebar every second
-const MAX_POLL_ATTEMPTS = 30; // Give up after 30 seconds
+const POLL_INTERVAL = 1000;
+const MAX_POLL_ATTEMPTS = 30;
+const INITIAL_VISIBLE_COUNT = 6;
 
+// State
 let channels: KickChannel[] = [];
+let settings: ExtensionSettings | null = null;
 let sectionElement: HTMLElement | null = null;
 let isCollapsed = false;
+let isExpandedList = false;
 
 /**
  * Initialize the content script
@@ -26,7 +26,12 @@ let isCollapsed = false;
 async function init(): Promise<void> {
   console.log('[Kwitch] Content script loading...');
   
-  // Request initial channel state
+  try {
+    settings = await getSettings();
+  } catch (error) {
+    console.log('[Kwitch] Could not load settings:', error);
+  }
+
   try {
     const response = await chrome.runtime.sendMessage({ type: 'GET_CHANNELS' }) as MessageType;
     if (response?.type === 'GET_CHANNELS_RESPONSE') {
@@ -36,13 +41,8 @@ async function init(): Promise<void> {
     console.log('[Kwitch] Could not get initial channels:', error);
   }
   
-  // Wait for sidebar to appear and inject
   waitForSidebar();
-  
-  // Listen for updates from background
   chrome.runtime.onMessage.addListener(handleMessage);
-  
-  // Watch for navigation changes (Twitch is a SPA)
   observeNavigation();
 }
 
@@ -73,46 +73,111 @@ function waitForSidebar(): void {
  * Find the Twitch sidebar element
  */
 function findSidebar(): HTMLElement | null {
-  for (const selector of SIDEBAR_SELECTORS) {
-    const element = document.querySelector(selector);
-    if (element) {
-      return element as HTMLElement;
-    }
+  const followedHeader = document.querySelector('[aria-label="Followed Channels"], [aria-label="Followed channels"]');
+  if (followedHeader) {
+    return followedHeader.closest('.side-nav-section') as HTMLElement || 
+           followedHeader.closest('nav') as HTMLElement ||
+           document.querySelector('.side-nav-section') as HTMLElement;
   }
-  return null;
+  
+  return document.querySelector('.side-nav-section') as HTMLElement;
 }
 
 /**
  * Inject the Kwitch section into the sidebar
  */
 function injectSection(sidebar: HTMLElement): void {
-  // Check if already injected
   if (document.querySelector('.kwitch-section')) {
     return;
   }
   
-  // Check if sidebar is collapsed
-  isCollapsed = sidebar.clientWidth < 100;
+  const sidebarRoot = document.querySelector('.side-nav, [data-a-target="side-nav-bar"]');
+  isCollapsed = sidebarRoot ? sidebarRoot.clientWidth < 200 : false;
   
-  // Create section
   sectionElement = document.createElement('div');
   sectionElement.className = `kwitch-section${isCollapsed ? ' collapsed' : ''}`;
   
-  // Insert at the top of the sidebar
-  const firstChild = sidebar.firstChild;
-  if (firstChild) {
-    sidebar.insertBefore(sectionElement, firstChild);
-  } else {
-    sidebar.appendChild(sectionElement);
-  }
+  const position = settings?.sidebarPosition || 'above_followed';
+  insertAtPosition(sidebar, sectionElement, position);
   
-  // Render channels
   renderChannels();
   
-  // Watch for sidebar collapse/expand
-  observeSidebarResize(sidebar);
+  if (sidebarRoot) {
+    observeSidebarResize(sidebarRoot as HTMLElement);
+  }
   
-  console.log('[Kwitch] Section injected');
+  console.log('[Kwitch] Section injected at', position);
+}
+
+/**
+ * Insert the section at the configured position
+ */
+function insertAtPosition(sidebar: HTMLElement, element: HTMLElement, position: string): void {
+  const findSection = (ariaLabel: string) => {
+    const header = document.querySelector(`[aria-label="${ariaLabel}"], [aria-label="${ariaLabel.toLowerCase()}"]`);
+    if (!header) return null;
+    return header.closest('.side-nav-section') || header.closest('div[role="group"]');
+  };
+
+  const followedSection = findSection('Followed Channels');
+  const recommendedSection = findSection('Recommended Channels') || findSection('Live Channels');
+  
+  const findHeaderByText = (text: string) => {
+    const headers = Array.from(document.querySelectorAll('h2, h3, .side-nav-header'));
+    return headers.find(h => h.textContent?.toLowerCase().includes(text.toLowerCase()));
+  };
+  const viewersAlsoWatchHeader = findHeaderByText('Viewers Also Watch');
+  const viewersAlsoWatchSection = viewersAlsoWatchHeader ? viewersAlsoWatchHeader.closest('.side-nav-section') || viewersAlsoWatchHeader.closest('div[role="group"]') : null;
+
+  try {
+    switch (position) {
+      case 'above_followed':
+        if (followedSection && followedSection.parentNode === sidebar) {
+          sidebar.insertBefore(element, followedSection);
+        } else if (followedSection) {
+          followedSection.parentNode?.insertBefore(element, followedSection);
+        } else {
+          sidebar.insertBefore(element, sidebar.firstChild);
+        }
+        break;
+        
+      case 'below_followed':
+        if (followedSection && followedSection.nextSibling) {
+          followedSection.parentNode?.insertBefore(element, followedSection.nextSibling);
+        } else if (followedSection) {
+          followedSection.parentNode?.appendChild(element);
+        } else {
+          sidebar.appendChild(element);
+        }
+        break;
+        
+      case 'below_live':
+        if (recommendedSection && recommendedSection.nextSibling) {
+          recommendedSection.parentNode?.insertBefore(element, recommendedSection.nextSibling);
+        } else if (recommendedSection) {
+          recommendedSection.parentNode?.appendChild(element);
+        } else {
+          insertAtPosition(sidebar, element, 'below_followed');
+        }
+        break;
+        
+      case 'below_viewers_also_watch':
+        if (viewersAlsoWatchSection && viewersAlsoWatchSection.nextSibling) {
+          viewersAlsoWatchSection.parentNode?.insertBefore(element, viewersAlsoWatchSection.nextSibling);
+        } else if (viewersAlsoWatchSection) {
+          viewersAlsoWatchSection.parentNode?.appendChild(element);
+        } else {
+          sidebar.appendChild(element);
+        }
+        break;
+        
+      default:
+        sidebar.insertBefore(element, sidebar.firstChild);
+    }
+  } catch (e) {
+    console.error('[Kwitch] Error inserting section:', e);
+    sidebar.insertBefore(element, sidebar.firstChild);
+  }
 }
 
 /**
@@ -123,37 +188,63 @@ function renderChannels(): void {
   
   sectionElement.innerHTML = '';
   
-  // Header with Kick icon
+  // Header
   const header = document.createElement('div');
   header.className = 'kwitch-section-header';
   
-  // Create Kick icon (inline SVG)
+  // Icon (only visible when collapsed, handled by CSS)
   const kickIcon = document.createElement('div');
   kickIcon.className = 'kwitch-section-icon';
-  kickIcon.innerHTML = `<svg viewBox="0 0 128 128" style="width:100%;height:100%">
-    <rect width="128" height="128" rx="16" fill="#53fc18"/>
-    <path d="M40 28h16v28l20-28h20L72 60l28 40H80L60 72v28H40V28z" fill="#0e0e10"/>
+  kickIcon.innerHTML = `<svg viewBox="0 0 20 20" width="20" height="20" fill="currentColor">
+    <path d="M4 2h2v4l3-4h3l-3 5 4 6h-3l-3-5-2 3v2H4V2z"/>
   </svg>`;
   
   header.appendChild(kickIcon);
+  
   const headerText = document.createElement('span');
-  headerText.textContent = 'Kick Channels';
+  headerText.className = 'kwitch-header-text';
+  headerText.textContent = 'KICK CHANNELS';
   header.appendChild(headerText);
+  
   sectionElement.appendChild(header);
   
   if (channels.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'kwitch-empty';
     empty.textContent = 'No channels';
-    empty.style.cssText = 'padding: 10px; color: #6d6d70; font-size: 12px; text-align: center;';
     sectionElement.appendChild(empty);
     return;
   }
   
-  // Channel cards
-  for (const channel of channels) {
+  // Sort: Live first, then by viewer count
+  const sortedChannels = [...channels].sort((a, b) => {
+    if (a.isLive && !b.isLive) return -1;
+    if (!a.isLive && b.isLive) return 1;
+    return (b.viewerCount || 0) - (a.viewerCount || 0);
+  });
+  
+  // Determine visible channels
+  const visibleChannels = isExpandedList ? sortedChannels : sortedChannels.slice(0, INITIAL_VISIBLE_COUNT);
+  const hasMore = sortedChannels.length > INITIAL_VISIBLE_COUNT;
+  
+  // Render cards
+  for (const channel of visibleChannels) {
     const card = createChannelCard(channel);
     sectionElement.appendChild(card);
+  }
+  
+  // Show More / Show Less button
+  if (hasMore) {
+    const showMoreBtn = document.createElement('button');
+    showMoreBtn.className = 'kwitch-show-more';
+    showMoreBtn.innerHTML = `
+      <span class="kwitch-show-more-text">${isExpandedList ? 'Show Less' : 'Show More'}</span>
+    `;
+    showMoreBtn.addEventListener('click', () => {
+      isExpandedList = !isExpandedList;
+      renderChannels();
+    });
+    sectionElement.appendChild(showMoreBtn);
   }
 }
 
@@ -178,10 +269,12 @@ function createChannelCard(channel: KickChannel): HTMLElement {
       ${channel.isLive ? '<div class="kwitch-live-indicator"></div>' : ''}
     </div>
     <div class="kwitch-channel-info">
-      <div class="kwitch-channel-name">${escapeHtml(channel.displayName)}</div>
+      <div class="kwitch-info-row">
+        <span class="kwitch-channel-name">${escapeHtml(channel.displayName)}</span>
+        ${channel.isLive ? `<span class="kwitch-viewer-count">${formatViewers(channel.viewerCount)}</span>` : ''}
+      </div>
       <div class="kwitch-channel-game">${escapeHtml(channel.category || (channel.isLive ? 'Live' : 'Offline'))}</div>
     </div>
-    ${channel.isLive ? `<div class="kwitch-viewer-count">${formatViewers(channel.viewerCount)}</div>` : ''}
   `;
   
   card.addEventListener('click', (e) => {
@@ -196,9 +289,6 @@ function createChannelCard(channel: KickChannel): HTMLElement {
  * Handle clicking on a channel
  */
 function handleChannelClick(channel: KickChannel): void {
-  console.log(`[Kwitch] Opening ${channel.slug}`);
-  
-  // Show the embedded Kick player overlay
   showKickPlayer(channel.slug);
 }
 
@@ -216,7 +306,6 @@ function handleMessage(message: MessageType): void {
  * Watch for navigation changes in Twitch SPA
  */
 function observeNavigation(): void {
-  // Re-inject if our section gets removed (e.g., React re-render)
   const observer = new MutationObserver(() => {
     if (!document.querySelector('.kwitch-section')) {
       const sidebar = findSidebar();
@@ -264,7 +353,7 @@ function formatViewers(count?: number): string {
  * Get default avatar URL
  */
 function getDefaultAvatar(slug: string): string {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(slug)}&background=00e701&color=fff&size=64`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(slug)}&background=2f2f35&color=fff&size=64`;
 }
 
 /**

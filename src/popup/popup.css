@@ -251,3 +251,36 @@ body {
   color: #6d6d70;
   font-size: 12px;
 }
+
+/* Settings Section */
+.settings-section {
+  padding: 12px 16px;
+  border-top: 1px solid #2f2f35;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.setting-row label {
+  font-size: 13px;
+  color: #adadb8;
+}
+
+.setting-row select {
+  padding: 6px 10px;
+  border: 1px solid #3d3d42;
+  border-radius: 4px;
+  background: #18181b;
+  color: #efeff1;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+}
+
+.setting-row select:focus {
+  border-color: #00e701;
+}

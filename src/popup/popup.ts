@@ -4,8 +4,8 @@
  * Manages the extension popup UI for adding/removing channels.
  */
 
-import { addChannel, removeChannel, getChannelSlugs } from '../lib/storage';
-import { KickChannel, MessageType } from '../lib/types';
+import { addChannel, removeChannel, getChannelSlugs, getSettings, setSettings } from '../lib/storage';
+import { KickChannel, MessageType, ExtensionSettings } from '../lib/types';
 
 // DOM Elements
 const addForm = document.getElementById('add-form') as HTMLFormElement;
@@ -14,6 +14,7 @@ const channelList = document.getElementById('channel-list') as HTMLUListElement;
 const emptyMessage = document.getElementById('empty-message') as HTMLParagraphElement;
 const refreshBtn = document.getElementById('refresh-btn') as HTMLButtonElement;
 const statusEl = document.getElementById('status') as HTMLSpanElement;
+const positionSelect = document.getElementById('position-select') as HTMLSelectElement;
 
 // Current channel state
 let channels: KickChannel[] = [];
@@ -42,6 +43,15 @@ async function init(): Promise<void> {
   }
   
   renderChannels();
+  
+  // Load settings
+  try {
+    const settings = await getSettings();
+    positionSelect.value = settings.sidebarPosition || 'above_followed';
+  } catch (error) {
+    console.log('Could not load settings:', error);
+  }
+  
   setStatus(`${channels.filter(c => c.isLive).length} live`);
 }
 
@@ -205,6 +215,13 @@ addForm.addEventListener('submit', (e) => {
 });
 
 refreshBtn.addEventListener('click', handleRefresh);
+
+// Listen for position change
+positionSelect.addEventListener('change', async () => {
+  const newPosition = positionSelect.value as ExtensionSettings['sidebarPosition'];
+  await setSettings({ sidebarPosition: newPosition });
+  setStatus('Settings saved! Reload Twitch to apply.');
+});
 
 // Listen for updates from background
 chrome.runtime.onMessage.addListener((message: MessageType) => {

@@ -38,6 +38,7 @@ export interface ExtensionSettings {
   embedEnabled: boolean;
   popoutEnabled: boolean;
   showOfflineChannels: boolean;
+  sidebarPosition: 'above_followed' | 'below_followed' | 'below_live' | 'below_viewers_also_watch';
 }
 
 /** Message types for communication between scripts */
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   embedEnabled: true,
   popoutEnabled: true,
   showOfflineChannels: true,
+  sidebarPosition: 'above_followed',
 };
 
 /** Default channels - pre-populated for demo */
