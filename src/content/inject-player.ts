@@ -66,6 +66,11 @@ export function showKickPlayer(slug: string): void {
     </div>
   `;
   
+  // Detect sidebar width (collapsed ~50px, expanded ~240px)
+  const sideNav = document.querySelector('.side-nav, [data-a-target="side-nav-bar"]') as HTMLElement;
+  const sidebarWidth = sideNav ? sideNav.offsetWidth : 50;
+  kickContainer.style.left = `${sidebarWidth}px`;
+  
   // Add to body
   document.body.appendChild(kickContainer);
   
