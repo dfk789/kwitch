@@ -131,7 +131,7 @@
   text-align: center;
 }
 
-/* Show More / Show Less button */
+/* Show More / Show Less button - matches Twitch style but with Kick green */
 .kwitch-show-more {
   display: flex;
   align-items: center;
@@ -140,7 +140,7 @@
   padding: 8px 10px;
   background: transparent;
   border: none;
-  color: #bf94ff;
+  color: #00e701;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -148,7 +148,8 @@
 }
 
 .kwitch-show-more:hover {
-  color: #a970ff;
+  color: #00ff00;
+  text-decoration: underline;
 }
 
 /* ========================================
