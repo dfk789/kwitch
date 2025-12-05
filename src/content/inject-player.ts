@@ -68,23 +68,28 @@ export function showKickPlayer(slug: string): void {
   
   // Detect sidebar width and update player position
   const sideNav = document.querySelector('.side-nav, [data-a-target="side-nav-bar"]') as HTMLElement;
+  let lastWidth = 0;
   
   const updatePlayerPosition = () => {
     if (kickContainer && sideNav) {
-      kickContainer.style.left = `${sideNav.offsetWidth}px`;
+      const newWidth = sideNav.offsetWidth;
+      if (newWidth !== lastWidth) {
+        lastWidth = newWidth;
+        kickContainer.style.left = `${newWidth}px`;
+        console.log(`[Kwitch] Player position updated: ${newWidth}px`);
+      }
     }
   };
   
   // Set initial position
   updatePlayerPosition();
   
-  // Watch for sidebar resize (collapse/expand toggle)
-  if (sideNav) {
-    const resizeObserver = new ResizeObserver(updatePlayerPosition);
-    resizeObserver.observe(sideNav);
-    // Store observer to disconnect on close
-    (kickContainer as any)._resizeObserver = resizeObserver;
-  }
+  // Use polling interval to detect sidebar changes (most reliable)
+  // Twitch uses CSS transitions/transforms that don't trigger resize events reliably
+  const pollInterval = setInterval(updatePlayerPosition, 100);
+  
+  // Store interval to clear on close
+  (kickContainer as any)._pollInterval = pollInterval;
   
   // Add to body
   document.body.appendChild(kickContainer);
@@ -108,9 +113,9 @@ export function closePlayer(): void {
   
   console.log('[Kwitch] Closing Kick player');
   
-  // Disconnect resize observer if any
-  if (kickContainer && (kickContainer as any)._resizeObserver) {
-    (kickContainer as any)._resizeObserver.disconnect();
+  // Clear polling interval if any
+  if (kickContainer && (kickContainer as any)._pollInterval) {
+    clearInterval((kickContainer as any)._pollInterval);
   }
   
   // Remove Kick container
