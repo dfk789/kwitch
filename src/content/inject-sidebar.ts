@@ -5,7 +5,7 @@
  */
 
 import { KickChannel, MessageType, ExtensionSettings } from '../lib/types';
-import { getSettings } from '../lib/storage';
+import { getSettings, getChannelSlugs } from '../lib/storage';
 import { showKickPlayer } from './inject-player';
 
 // Constants
@@ -32,13 +32,33 @@ async function init(): Promise<void> {
     console.log('[Kwitch] Could not load settings:', error);
   }
 
+  // Always get channel slugs from storage first - this is the source of truth
+  // This ensures channels are shown even when the API is down
+  try {
+    const slugs = await getChannelSlugs();
+    channels = slugs.map(slug => ({
+      slug,
+      displayName: slug,
+      profilePic: '',
+      isLive: false,
+      lastUpdated: 0,
+    }));
+  } catch (error) {
+    console.log('[Kwitch] Could not get channel slugs:', error);
+  }
+
+  // Try to get live status from background (may fail if API is down)
   try {
     const response = await chrome.runtime.sendMessage({ type: 'GET_CHANNELS' }) as MessageType;
-    if (response?.type === 'GET_CHANNELS_RESPONSE') {
-      channels = response.channels;
+    if (response?.type === 'GET_CHANNELS_RESPONSE' && response.channels.length > 0) {
+      // Merge: use background data for channels that exist, keep placeholders for missing
+      const backgroundMap = new Map(response.channels.map(c => [c.slug.toLowerCase(), c]));
+      channels = channels.map(channel => 
+        backgroundMap.get(channel.slug.toLowerCase()) || channel
+      );
     }
   } catch (error) {
-    console.log('[Kwitch] Could not get initial channels:', error);
+    console.log('[Kwitch] Could not get live status from background:', error);
   }
   
   waitForSidebar();
