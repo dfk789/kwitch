@@ -129,15 +129,28 @@ function insertAtPosition(sidebar: HTMLElement, element: HTMLElement, position: 
   const viewersAlsoWatchHeader = findHeaderByText('Viewers Also Watch');
   const viewersAlsoWatchSection = viewersAlsoWatchHeader ? viewersAlsoWatchHeader.closest('.side-nav-section') || viewersAlsoWatchHeader.closest('div[role="group"]') : null;
 
+  // Find 'For You' header - Kick section should go AFTER it but BEFORE Followed
+  const forYouHeader = findHeaderByText('For You');
+  const forYouSection = forYouHeader ? forYouHeader.closest('.side-nav-section') || forYouHeader.closest('div[role="group"]') || forYouHeader.parentElement : null;
+
   try {
     switch (position) {
       case 'above_followed':
-        if (followedSection && followedSection.parentNode === sidebar) {
+        // Insert AFTER "For You" header but BEFORE "Followed Channels"
+        if (forYouSection && forYouSection.nextSibling) {
+          // Insert after the For You header/section
+          forYouSection.parentNode?.insertBefore(element, forYouSection.nextSibling);
+        } else if (followedSection && followedSection.parentNode === sidebar) {
           sidebar.insertBefore(element, followedSection);
         } else if (followedSection) {
           followedSection.parentNode?.insertBefore(element, followedSection);
         } else {
-          sidebar.insertBefore(element, sidebar.firstChild);
+          // Fallback: after first child (which should be For You)
+          if (sidebar.firstChild?.nextSibling) {
+            sidebar.insertBefore(element, sidebar.firstChild.nextSibling);
+          } else {
+            sidebar.appendChild(element);
+          }
         }
         break;
         
@@ -249,15 +262,12 @@ function renderChannels(): void {
 }
 
 /**
- * Create a channel card element
+ * Create a channel card element with Twitch-style hover tooltip
  */
 function createChannelCard(channel: KickChannel): HTMLElement {
   const card = document.createElement('a');
   card.className = `kwitch-channel${channel.isLive ? '' : ' offline'}`;
   card.href = '#';
-  card.title = channel.isLive 
-    ? `${channel.displayName} - ${channel.title || 'Live'} (${formatViewers(channel.viewerCount)} viewers)`
-    : `${channel.displayName} - Offline`;
   
   card.innerHTML = `
     <div class="kwitch-avatar-wrapper">
@@ -277,12 +287,52 @@ function createChannelCard(channel: KickChannel): HTMLElement {
     </div>
   `;
   
+  // Create tooltip element (Twitch-style)
+  const tooltip = document.createElement('div');
+  tooltip.className = 'kwitch-tooltip';
+  tooltip.innerHTML = channel.isLive ? `
+    <div class="kwitch-tooltip-header">
+      <span class="kwitch-tooltip-name">${escapeHtml(channel.displayName)}</span>
+      <span class="kwitch-tooltip-category">${escapeHtml(channel.category || 'Live')}</span>
+    </div>
+    <div class="kwitch-tooltip-title">${escapeHtml(channel.title || 'Live on Kick')}</div>
+    <div class="kwitch-tooltip-footer">
+      <span class="kwitch-tooltip-live">● Live</span>
+      <span class="kwitch-tooltip-viewers">${formatViewers(channel.viewerCount)} viewers</span>
+    </div>
+  ` : `
+    <div class="kwitch-tooltip-header">
+      <span class="kwitch-tooltip-name">${escapeHtml(channel.displayName)}</span>
+    </div>
+    <div class="kwitch-tooltip-offline">Offline</div>
+  `;
+  
+  // Add tooltip hover handlers
+  card.addEventListener('mouseenter', (e) => {
+    document.body.appendChild(tooltip);
+    positionTooltip(e as MouseEvent, tooltip);
+  });
+  
+  card.addEventListener('mouseleave', () => {
+    tooltip.remove();
+  });
+  
   card.addEventListener('click', (e) => {
     e.preventDefault();
+    tooltip.remove();
     handleChannelClick(channel);
   });
   
   return card;
+}
+
+/**
+ * Position tooltip near the cursor/element
+ */
+function positionTooltip(e: MouseEvent, tooltip: HTMLElement): void {
+  const rect = (e.target as HTMLElement).getBoundingClientRect();
+  tooltip.style.left = `${rect.right + 10}px`;
+  tooltip.style.top = `${rect.top}px`;
 }
 
 /**

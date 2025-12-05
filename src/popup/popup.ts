@@ -158,22 +158,37 @@ async function handleRemoveChannel(slug: string): Promise<void> {
 /**
  * Handle refresh button
  */
-function handleRefresh(): void {
+async function handleRefresh(): Promise<void> {
   setStatus('Refreshing...');
   refreshBtn.classList.add('spinning');
   
+  // Set up listener for the update BEFORE triggering refresh
+  const updatePromise = new Promise<void>((resolve) => {
+    const handler = (message: MessageType) => {
+      if (message.type === 'CHANNELS_UPDATED') {
+        channels = message.channels;
+        renderChannels();
+        chrome.runtime.onMessage.removeListener(handler);
+        resolve();
+      }
+    };
+    chrome.runtime.onMessage.addListener(handler);
+    
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      chrome.runtime.onMessage.removeListener(handler);
+      resolve();
+    }, 5000);
+  });
+  
+  // Trigger refresh
   chrome.runtime.sendMessage({ type: 'FORCE_REFRESH' });
   
-  // Re-fetch after a delay
-  setTimeout(async () => {
-    const response = await chrome.runtime.sendMessage({ type: 'GET_CHANNELS' }) as MessageType;
-    if (response?.type === 'GET_CHANNELS_RESPONSE') {
-      channels = response.channels;
-      renderChannels();
-    }
-    refreshBtn.classList.remove('spinning');
-    setStatus(`${channels.filter(c => c.isLive).length} live`);
-  }, 2000);
+  // Wait for update
+  await updatePromise;
+  
+  refreshBtn.classList.remove('spinning');
+  setStatus(`${channels.filter(c => c.isLive).length} live`);
 }
 
 /**
