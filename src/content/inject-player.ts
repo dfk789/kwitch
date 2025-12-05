@@ -66,10 +66,25 @@ export function showKickPlayer(slug: string): void {
     </div>
   `;
   
-  // Detect sidebar width (collapsed ~50px, expanded ~240px)
+  // Detect sidebar width and update player position
   const sideNav = document.querySelector('.side-nav, [data-a-target="side-nav-bar"]') as HTMLElement;
-  const sidebarWidth = sideNav ? sideNav.offsetWidth : 50;
-  kickContainer.style.left = `${sidebarWidth}px`;
+  
+  const updatePlayerPosition = () => {
+    if (kickContainer && sideNav) {
+      kickContainer.style.left = `${sideNav.offsetWidth}px`;
+    }
+  };
+  
+  // Set initial position
+  updatePlayerPosition();
+  
+  // Watch for sidebar resize (collapse/expand toggle)
+  if (sideNav) {
+    const resizeObserver = new ResizeObserver(updatePlayerPosition);
+    resizeObserver.observe(sideNav);
+    // Store observer to disconnect on close
+    (kickContainer as any)._resizeObserver = resizeObserver;
+  }
   
   // Add to body
   document.body.appendChild(kickContainer);
@@ -92,6 +107,11 @@ export function closePlayer(): void {
   if (!isKickActive) return;
   
   console.log('[Kwitch] Closing Kick player');
+  
+  // Disconnect resize observer if any
+  if (kickContainer && (kickContainer as any)._resizeObserver) {
+    (kickContainer as any)._resizeObserver.disconnect();
+  }
   
   // Remove Kick container
   if (kickContainer) {
