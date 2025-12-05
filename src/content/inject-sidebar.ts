@@ -44,6 +44,26 @@ async function init(): Promise<void> {
   waitForSidebar();
   chrome.runtime.onMessage.addListener(handleMessage);
   observeNavigation();
+  
+  // Listen for settings changes to update position dynamically
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'sync' && changes.kwitchSettings) {
+      const newSettings = changes.kwitchSettings.newValue;
+      if (newSettings && newSettings.sidebarPosition !== settings?.sidebarPosition) {
+        settings = newSettings;
+        // Re-inject section at new position
+        const existingSection = document.querySelector('.kwitch-section');
+        if (existingSection) {
+          existingSection.remove();
+          sectionElement = null;
+          const sidebar = findSidebar();
+          if (sidebar) {
+            injectSection(sidebar);
+          }
+        }
+      }
+    }
+  });
 }
 
 /**
@@ -233,18 +253,39 @@ function renderChannels(): void {
     sectionElement.appendChild(card);
   }
   
-  // Show More / Show Less button
+  // Show More / Show Less buttons - Twitch style (both buttons when expanded)
   if (hasMore) {
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'kwitch-show-buttons';
+    
+    // Show More button (always visible when there are more channels)
     const showMoreBtn = document.createElement('button');
     showMoreBtn.className = 'kwitch-show-more';
-    showMoreBtn.innerHTML = `
-      <span class="kwitch-show-more-text">${isExpandedList ? 'Show Less' : 'Show More'}</span>
-    `;
+    showMoreBtn.textContent = 'Show More';
     showMoreBtn.addEventListener('click', () => {
-      isExpandedList = !isExpandedList;
+      isExpandedList = true;
       renderChannels();
     });
-    sectionElement.appendChild(showMoreBtn);
+    
+    // Show Less button (only visible when expanded)
+    const showLessBtn = document.createElement('button');
+    showLessBtn.className = 'kwitch-show-less';
+    showLessBtn.textContent = 'Show Less';
+    showLessBtn.addEventListener('click', () => {
+      isExpandedList = false;
+      renderChannels();
+    });
+    
+    if (isExpandedList) {
+      // When expanded, show both buttons side by side
+      buttonContainer.appendChild(showMoreBtn);
+      buttonContainer.appendChild(showLessBtn);
+    } else {
+      // When collapsed, only show "Show More"
+      buttonContainer.appendChild(showMoreBtn);
+    }
+    
+    sectionElement.appendChild(buttonContainer);
   }
 }
 
@@ -255,6 +296,11 @@ function createChannelCard(channel: KickChannel): HTMLElement {
   const card = document.createElement('a');
   card.className = `kwitch-channel${channel.isLive ? '' : ' offline'}`;
   card.href = '#';
+  
+  // Viewer count with red dot like Twitch
+  const viewerHtml = channel.isLive 
+    ? `<span class="kwitch-viewer-count"><span class="kwitch-live-dot"></span>${formatViewers(channel.viewerCount)}</span>` 
+    : '<span class="kwitch-offline-text">Offline</span>';
   
   card.innerHTML = `
     <div class="kwitch-avatar-wrapper">
@@ -268,7 +314,7 @@ function createChannelCard(channel: KickChannel): HTMLElement {
     <div class="kwitch-channel-info">
       <div class="kwitch-info-row">
         <span class="kwitch-channel-name">${escapeHtml(channel.displayName)}</span>
-        ${channel.isLive ? `<span class="kwitch-viewer-count">${formatViewers(channel.viewerCount)}</span>` : ''}
+        ${viewerHtml}
       </div>
       <div class="kwitch-channel-game">${escapeHtml(channel.category || (channel.isLive ? 'Live' : 'Offline'))}</div>
     </div>

@@ -108,12 +108,30 @@
   text-overflow: ellipsis;
 }
 
+/* Viewer count - red dot with white number like Twitch */
 .kwitch-viewer-count {
-  font-size: 12px;
-  color: #eb0400;
-  font-weight: 600;
-  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #efeff1;
+  font-weight: 400;
+  margin-left: auto;
   flex-shrink: 0;
+}
+
+.kwitch-live-dot {
+  width: 8px;
+  height: 8px;
+  background: #eb0400;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kwitch-offline-text {
+  font-size: 13px;
+  color: #adadb8;
+  margin-left: auto;
 }
 
 /* Info row - name + viewer count inline */
@@ -131,23 +149,27 @@
   text-align: center;
 }
 
-/* Show More / Show Less button - matches Twitch style but with Kick green */
-.kwitch-show-more {
+/* Show More / Show Less container - Twitch style */
+.kwitch-show-buttons {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 8px 10px;
+  justify-content: space-between;
+  padding: 5px 10px;
+}
+
+.kwitch-show-more,
+.kwitch-show-less {
   background: transparent;
   border: none;
   color: #00e701;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: color 0.1s;
+  padding: 5px 0;
+  text-decoration: none;
 }
 
-.kwitch-show-more:hover {
+.kwitch-show-more:hover,
+.kwitch-show-less:hover {
   color: #00ff00;
   text-decoration: underline;
 }
