@@ -19,6 +19,7 @@ let settings: ExtensionSettings | null = null;
 let sectionElement: HTMLElement | null = null;
 let isCollapsed = false;
 let isExpandedList = false;
+let activeTooltip: HTMLElement | null = null;
 
 /**
  * Initialize the content script
@@ -245,6 +246,12 @@ function insertAtPosition(sidebar: HTMLElement, element: HTMLElement, position: 
  */
 function renderChannels(): void {
   if (!sectionElement) return;
+
+  // Clear any active tooltip when re-rendering
+  if (activeTooltip) {
+    activeTooltip.remove();
+    activeTooltip = null;
+  }
   
   sectionElement.innerHTML = '';
   
@@ -382,17 +389,29 @@ function createChannelCard(channel: KickChannel): HTMLElement {
   
   // Add tooltip hover handlers
   card.addEventListener('mouseenter', (e) => {
+    // Remove any existing tooltip first
+    if (activeTooltip) {
+      activeTooltip.remove();
+    }
+    
     document.body.appendChild(tooltip);
+    activeTooltip = tooltip;
     positionTooltip(e as MouseEvent, tooltip);
   });
   
   card.addEventListener('mouseleave', () => {
-    tooltip.remove();
+    if (activeTooltip === tooltip) {
+      tooltip.remove();
+      activeTooltip = null;
+    }
   });
   
   card.addEventListener('click', (e) => {
     e.preventDefault();
-    tooltip.remove();
+    if (activeTooltip === tooltip) {
+      tooltip.remove();
+      activeTooltip = null;
+    }
     handleChannelClick(channel);
   });
   
