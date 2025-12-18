@@ -19,7 +19,7 @@ let settings: ExtensionSettings | null = null;
 let sectionElement: HTMLElement | null = null;
 let isCollapsed = false;
 let isExpandedList = false;
-let activeTooltip: HTMLElement | null = null;
+let tooltipElement: HTMLElement | null = null;
 
 /**
  * Initialize the content script
@@ -248,10 +248,7 @@ function renderChannels(): void {
   if (!sectionElement) return;
 
   // Clear any active tooltip when re-rendering
-  if (activeTooltip) {
-    activeTooltip.remove();
-    activeTooltip = null;
-  }
+  hideTooltip();
   
   sectionElement.innerHTML = '';
   
@@ -367,51 +364,18 @@ function createChannelCard(channel: KickChannel): HTMLElement {
     </div>
   `;
   
-  // Create tooltip element (Twitch-style)
-  const tooltip = document.createElement('div');
-  tooltip.className = 'kwitch-tooltip';
-  tooltip.innerHTML = channel.isLive ? `
-    <div class="kwitch-tooltip-header">
-      <span class="kwitch-tooltip-name">${escapeHtml(channel.displayName)}</span>
-      <span class="kwitch-tooltip-category">${escapeHtml(channel.category || 'Live')}</span>
-    </div>
-    <div class="kwitch-tooltip-title">${escapeHtml(channel.title || 'Live on Kick')}</div>
-    <div class="kwitch-tooltip-footer">
-      <span class="kwitch-tooltip-live">● Live</span>
-      <span class="kwitch-tooltip-viewers">${formatViewers(channel.viewerCount)} viewers</span>
-    </div>
-  ` : `
-    <div class="kwitch-tooltip-header">
-      <span class="kwitch-tooltip-name">${escapeHtml(channel.displayName)}</span>
-    </div>
-    <div class="kwitch-tooltip-offline">Offline</div>
-  `;
-  
   // Add tooltip hover handlers
   card.addEventListener('mouseenter', (e) => {
-    // Remove any existing tooltip first
-    if (activeTooltip) {
-      activeTooltip.remove();
-    }
-    
-    document.body.appendChild(tooltip);
-    activeTooltip = tooltip;
-    positionTooltip(e as MouseEvent, tooltip);
+    showTooltip(e as MouseEvent, channel);
   });
   
   card.addEventListener('mouseleave', () => {
-    if (activeTooltip === tooltip) {
-      tooltip.remove();
-      activeTooltip = null;
-    }
+    hideTooltip();
   });
   
   card.addEventListener('click', (e) => {
     e.preventDefault();
-    if (activeTooltip === tooltip) {
-      tooltip.remove();
-      activeTooltip = null;
-    }
+    hideTooltip();
     handleChannelClick(channel);
   });
   
@@ -419,10 +383,58 @@ function createChannelCard(channel: KickChannel): HTMLElement {
 }
 
 /**
+ * Show global tooltip
+ */
+function showTooltip(e: MouseEvent, channel: KickChannel): void {
+  if (!tooltipElement) {
+    tooltipElement = document.createElement('div');
+    tooltipElement.className = 'kwitch-tooltip';
+  }
+  
+  // Update content
+  if (channel.isLive) {
+    tooltipElement.innerHTML = `
+      <div class="kwitch-tooltip-header">
+        <span class="kwitch-tooltip-name">${escapeHtml(channel.displayName)}</span>
+        <span class="kwitch-tooltip-category">${escapeHtml(channel.category || 'Live')}</span>
+      </div>
+      <div class="kwitch-tooltip-title">${escapeHtml(channel.title || 'Live on Kick')}</div>
+      <div class="kwitch-tooltip-footer">
+        <span class="kwitch-tooltip-live">● Live</span>
+        <span class="kwitch-tooltip-viewers">${formatViewers(channel.viewerCount)} viewers</span>
+      </div>
+    `;
+  } else {
+    tooltipElement.innerHTML = `
+      <div class="kwitch-tooltip-header">
+        <span class="kwitch-tooltip-name">${escapeHtml(channel.displayName)}</span>
+      </div>
+      <div class="kwitch-tooltip-offline">Offline</div>
+    `;
+  }
+  
+  if (!tooltipElement.parentElement) {
+    document.body.appendChild(tooltipElement);
+  }
+  
+  positionTooltip(e, tooltipElement);
+}
+
+/**
+ * Hide global tooltip
+ */
+function hideTooltip(): void {
+  if (tooltipElement && tooltipElement.parentElement) {
+    tooltipElement.remove();
+  }
+}
+
+/**
  * Position tooltip near the cursor/element
  */
 function positionTooltip(e: MouseEvent, tooltip: HTMLElement): void {
-  const rect = (e.target as HTMLElement).getBoundingClientRect();
+  const target = (e.currentTarget || e.target) as HTMLElement;
+  const rect = target.getBoundingClientRect();
   tooltip.style.left = `${rect.right + 10}px`;
   tooltip.style.top = `${rect.top}px`;
 }
